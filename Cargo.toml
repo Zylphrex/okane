@@ -1,0 +1,13 @@
+[package]
+name = "okane"
+version = "0.0.1"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+structopt = "0.3"
+thirtyfour_sync = "0.25"
+tokio = { version = "0.2.25", features = ["full"] }
+twilio = "1.0"
