@@ -15,13 +15,16 @@ struct Cli {
     server: String,
     #[structopt(long)]
     headless: bool,
+
     #[structopt(long, requires_all = &["callee", "twilio-auth-token", "twilio-auth-token"])]
+    twilio: bool,
+    #[structopt(long, requires = "twilio")]
     caller: String,
-    #[structopt(long, requires = "caller")]
+    #[structopt(long, requires = "twilio")]
     callee: String,
-    #[structopt(long, requires = "caller")]
+    #[structopt(long, requires = "twilio")]
     twilio_account_id: String,
-    #[structopt(long, requires = "caller")]
+    #[structopt(long, requires = "twilio")]
     twilio_auth_token: String,
 
     #[structopt(long, requires_all = &["rogers-username", "rogers-password"])]
@@ -31,12 +34,26 @@ struct Cli {
     #[structopt(long, requires = "rogers")]
     rogers_password: Option<String>,
 
+    #[structopt(long, requires_all = &["rogers-business-username", "rogers-business-password"])]
+    rogers_business: bool,
+    #[structopt(long, requires = "rogers-business")]
+    rogers_business_username: Option<String>,
+    #[structopt(long, requires = "rogers-business")]
+    rogers_business_password: Option<String>,
+
     #[structopt(long, requires_all = &["enbridge-username", "enbridge-password"])]
     enbridge: bool,
     #[structopt(long, requires = "enbridge")]
     enbridge_username: Option<String>,
     #[structopt(long, requires = "enbridge")]
     enbridge_password: Option<String>,
+
+    #[structopt(long, requires_all = &["toronto-hydro-username", "toronto-hydro-password"])]
+    toronto_hydro: bool,
+    #[structopt(long, requires = "toronto-hydro")]
+    toronto_hydro_username: Option<String>,
+    #[structopt(long, requires = "toronto-hydro")]
+    toronto_hydro_password: Option<String>,
 }
 
 #[derive(Debug)]
@@ -70,11 +87,23 @@ async fn main() -> Result<(), OkaneError> {
         let username = &args.rogers_username.unwrap();
         let password = &args.rogers_password.unwrap();
 
-        let rogers_scraper = scraper::rogers::RogersScraper::new(&driver, username, password);
+        let rogers_scraper = scraper::rogers::RogersScraper::new(&driver, &false, username, password);
         let balance = rogers_scraper.run().map_err(|err| OkaneError::WebDriverError(err))?;
         println!("rogers balance {:?}", balance);
         if balance > 0.0 {
             balances.push(format!("- Rogers: ${:.2}", balance));
+        }
+    }
+
+    if args.rogers_business {
+        let username = &args.rogers_business_username.unwrap();
+        let password = &args.rogers_business_password.unwrap();
+
+        let rogers_scraper = scraper::rogers::RogersScraper::new(&driver, &true, username, password);
+        let balance = rogers_scraper.run().map_err(|err| OkaneError::WebDriverError(err))?;
+        println!("rogers business balance {:?}", balance);
+        if balance > 0.0 {
+            balances.push(format!("- Rogers Business: ${:.2}", balance));
         }
     }
 
@@ -90,7 +119,19 @@ async fn main() -> Result<(), OkaneError> {
         }
     }
 
-    if balances.len() > 1 && args.callee.len() > 0 {
+    if args.toronto_hydro {
+        let username = &args.toronto_hydro_username.unwrap();
+        let password = &args.toronto_hydro_password.unwrap();
+
+        let toronto_hydro_scraper = scraper::toronto_hydro::TorontoHydroScraper::new(&driver, username, password);
+        let balance = toronto_hydro_scraper.run().map_err(|err| OkaneError::WebDriverError(err))?;
+        println!("toronto hydro balance {:?}", balance);
+        if balance > 0.0 {
+            balances.push(format!("- Toronto Hydro: ${:.2}", balance));
+        }
+    }
+
+    if args.twilio && balances.len() > 1 && args.callee.len() > 0 {
         let sender = &args.caller;
         let receiver = &args.callee;
         let account_id = &args.twilio_account_id;
