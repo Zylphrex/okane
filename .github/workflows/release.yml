@@ -14,12 +14,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build
         run: cargo build --release
-      - name: Test
-        run: ls target/release
-      - name: Move Target
-        run: mv target/release/okane .
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: okane
-          draft: true
+          files: target/releases/okane
