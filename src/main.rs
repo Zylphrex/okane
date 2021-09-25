@@ -54,6 +54,13 @@ struct Cli {
     toronto_hydro_username: Option<String>,
     #[structopt(long, requires = "toronto-hydro")]
     toronto_hydro_password: Option<String>,
+
+    #[structopt(long, requires_all = &["alectra-utilities-username", "alectra-utilities-password"])]
+    alectra_utilities: bool,
+    #[structopt(long, requires = "alectra-utilities")]
+    alectra_utilities_username: Option<String>,
+    #[structopt(long, requires = "alectra-utilities")]
+    alectra_utilities_password: Option<String>,
 }
 
 #[derive(Debug)]
@@ -128,6 +135,18 @@ async fn main() -> Result<(), OkaneError> {
         println!("toronto hydro balance {:?}", balance);
         if balance > 0.0 {
             balances.push(format!("- Toronto Hydro: ${:.2}", balance));
+        }
+    }
+
+    if args.alectra_utilities {
+        let username = &args.alectra_utilities_username.unwrap();
+        let password = &args.alectra_utilities_password.unwrap();
+
+        let alectra_utilities_scraper = scraper::alectra_utilities::AlectraUtilitiesScraper::new(&driver, username, password);
+        let balance = alectra_utilities_scraper.run().map_err(|err| OkaneError::WebDriverError(err))?;
+        println!("alectra utilities balance {:?}", balance);
+        if balance > 0.0 {
+            balances.push(format!("- Alectra Utilities: ${:.2}", balance));
         }
     }
 
