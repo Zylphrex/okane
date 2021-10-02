@@ -40,13 +40,13 @@ impl<'a> AlectraUtilitiesScraper<'a> {
     }
 
     fn login(&self) -> WebDriverResult<()> {
-        self.driver.click_element("#accountNumberLoginTab a")?;
+        self.driver.click_element("#emailLoginTab a")?;
         println!("typing username");
-        self.driver.type_text("#accessCode", self.username)?;
+        self.driver.type_text("#accessEmail", self.username)?;
         println!("typing password");
-        self.driver.type_text("#password2", self.password)?;
+        self.driver.type_text("#password1", self.password)?;
         println!("sigining in");
-        self.driver.click_element("#accountLogin button")?;
+        self.driver.click_element("#emailLogin button")?;
         Ok(())
     }
 
